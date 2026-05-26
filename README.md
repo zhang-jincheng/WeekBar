@@ -1,0 +1,47 @@
+# WeekBar
+
+**中文**：macOS 菜单栏 + Windows 任务栏角落周数显示工具  
+**English**: A lightweight week indicator for macOS menu bar and Windows taskbar corner
+
+## 功能 / Features
+- 显示当前周数（可自定义起点日期）
+- 每天自动刷新
+- macOS：菜单栏常驻
+- Windows：右下角时间区域上方悬浮条（不遮挡普通窗口）
+
+## 下载 / Download
+请前往 [Releases](https://github.com/zhang-jincheng/WeekBar/releases) 页面获取安装包。
+
+- **macOS**: `WeekMenuBar-1.1.0.pkg`
+- **Windows**: `WeekMenuBar-Setup-1.1.0.exe`
+
+## 构建 / Build
+### macOS
+```bash
+swift build -c release
+csc WeekMenuBar.cs
+
+### 3. 创建 LICENSE
+```bash
+cat > LICENSE << 'EOF'
+MIT License
+
+Copyright (c) 2026 zhang-jincheng
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
