@@ -16,6 +16,8 @@
 
 ### Windows
 ![Windows 任务栏角落](Windows效果图..png)
+![Windows 任务栏角落](Windows效果图2.png)
+![Windows 任务栏角落](Windows效果图3.png)
 
 ## 下载 / Download
 请前往 [Releases](https://github.com/zhang-jincheng/WeekBar/releases) 页面获取安装包。
