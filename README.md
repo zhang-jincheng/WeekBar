@@ -15,7 +15,7 @@
 - 自动记住起点日期  
   Persist the selected start date automatically
 
-- 每天跨 0 点自动刷新  
+- 每周一跨 0 点自动刷新  
   Refresh automatically after midnight
 
 - macOS：菜单栏常驻  
