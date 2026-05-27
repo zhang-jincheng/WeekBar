@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="WeekBar 桌面周数助手使用指南 - 在 macOS 和 Windows 上优雅显示当前周数"/>
+<title>WeekBar — 桌面周数助手</title>
+
+<style>
+/* ==========================================
+   DESIGN TOKENS — 统一设计规范
+   ========================================== */
+:root {
+  /* 颜色 */
+  --bg-primary: #f5f5f7;
+  --bg-secondary: #ffffff;
+  --bg-gradient: linear-gradient(180deg, #f5f5f7 0%, #ffffff 100%);
+  --card-bg: #ffffff;
+  --card-shadow: 0 2px 12px rgba(0,0,0,.06);
+  --card-shadow-hover: 0 12px 28px rgba(0,0,0,.1);
+  --text-primary: #1d1d1f;
+  --text-secondary: #424245;
+  --text-muted: #86868b;
+  --accent-primary: #007aff;
+  --accent-secondary: #5856d6;
+  --accent-gradient: linear-gradient(135deg, #007aff, #5856d6);
+  --border-color: rgba(0,0,0,.06);
+  --border-light: rgba(0,0,0,.03);
+
+  /* 排版 —— 系统字体栈，零网络开销 */
+  --font-display: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-body: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono: "SF Mono","Monaco","Inconsolata","Fira Code",monospace;
+  --title-size: clamp(2rem,5vw,3.5rem);
+  --subtitle-size: clamp(1rem,2.5vw,1.5rem);
+  --h2-size: clamp(1.5rem,4vw,2.5rem);
+  --h3-size: clamp(1.125rem,2.5vw,1.75rem);
+  --body-size: clamp(.875rem,1.5vw,1rem);
+  --caption-size: clamp(.75rem,1vw,.875rem);
+
+  /* 间距 —— 统一体系 */
+  --container-padding: clamp(1.5rem,3vw,3rem);
+  --content-gap: clamp(1rem,2vw,2rem);
+  --element-gap: clamp(.75rem,1.5vw,1.25rem);
+
+  /* 圆角 —— 统一：卡片 20px / 内嵌块 12px / 按钮全圆角 */
+  --radius-card: 20px;
+  --radius-inner: 12px;
+  --radius-pill: 100px;
+
+  /* 卡片 —— 统一定义 */
+  --card-padding: 1.75rem;
+  --card-padding-compact: 1.25rem;
+
+  /* 动效 —— 统一 */
+  --ease-out: cubic-bezier(.25,.46,.45,.94);
+  --duration: .3s;
+  --duration-fast: .2s;
+  --hover-lift: -3px;
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #000;
+    --bg-secondary: #1c1c1e;
+    --bg-gradient: linear-gradient(180deg, #000 0%, #1c1c1e 100%);
+    --card-bg: #1c1c1e;
+    --card-shadow: 0 2px 12px rgba(0,0,0,.3);
+    --card-shadow-hover: 0 12px 28px rgba(0,0,0,.4);
+    --text-primary: #f5f5f7;
+    --text-secondary: #d1d1d6;
+    --text-muted: #8e8e93;
+    --border-color: rgba(255,255,255,.08);
+    --border-light: rgba(255,255,255,.05);
+  }
+}
+
+/* ==========================================
+   RESET & BASE
+   ========================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow-x:hidden;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-body);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;scroll-behavior:smooth;}
+html{scroll-snap-type:y mandatory;}
+
+/* 滚动条 */
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:rgba(0,0,0,.05);border-radius:4px;}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,.2);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.3);}
+@media(prefers-color-scheme:dark){
+  ::-webkit-scrollbar-track{background:rgba(255,255,255,.05);}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.3);}
+}
+
+/* ==========================================
+   BACKGROUND — 浮动背景
+   ========================================== */
+.apple-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;}
+.apple-bg .backdrop{position:absolute;inset:0;background:var(--bg-gradient);}
+.apple-bg .grid{position:absolute;inset:0;background-image:linear-gradient(90deg,var(--border-light) 1px,transparent 1px),linear-gradient(var(--border-light) 1px,transparent 1px);background-size:60px 60px;}
+.apple-bg .circle{position:absolute;border-radius:50%;background:linear-gradient(135deg,rgba(0,122,255,.05),rgba(88,86,214,.03));animation:float 20s infinite ease-in-out;}
+.apple-bg .circle:first-child{width:300px;height:300px;top:-50px;right:-50px;animation-delay:0s;}
+.apple-bg .circle:last-child{width:200px;height:200px;bottom:-30px;left:-50px;animation-delay:7s;}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(20px,-15px) scale(1.03)}66%{transform:translate(-15px,10px) scale(.97)}}
+
+/* ==========================================
+   SLIDE — 解决溢出
+   ========================================== */
+.slide{width:100vw;height:100vh;height:100dvh;scroll-snap-align:start;display:flex;flex-direction:column;padding:var(--container-padding);overflow-y:auto;}
+.slide-inner{flex:1;display:flex;flex-direction:column;max-width:min(1400px,95vw);margin:0 auto;position:relative;z-index:1;width:100%;min-height:min-content;}
+
+/* 布局网格 */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--content-gap);align-items:start;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--content-gap);align-items:start;}
+.grid-4{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--content-gap);align-items:start;}
+.grid-1{display:grid;grid-template-columns:1fr;}
+
+/* ==========================================
+   统一卡片组件 .card（唯一卡片基类）
+   ========================================== */
+.card{
+  background:var(--card-bg);
+  border-radius:var(--radius-card);
+  padding:var(--card-padding);
+  box-shadow:var(--card-shadow);
+  border:1px solid var(--border-light);
+  transition:all var(--duration) var(--ease-out);
+  height:min-content;
+}
+
+/* 卡片修饰器 */
+.card--hover:hover{transform:translateY(var(--hover-lift));box-shadow:var(--card-shadow-hover);}
+.card--compact{padding:var(--card-padding-compact);}
+.card--centered{text-align:center;}
+.card--no-border{border:none;}
+
+/* 内嵌区域（卡片中的子块） */
+.card .inner-block{
+  background:linear-gradient(135deg,rgba(0,122,255,.06),rgba(88,86,214,.03));
+  padding:1.25rem;
+  border-radius:var(--radius-inner);
+  border:1px solid rgba(0,122,255,.1);
+  transition:background var(--duration-fast) var(--ease-out);
+}
+
+/* 代码块 —— 左侧蓝色竖线（与卡片装饰一致） */
+.code-block{
+  background:rgba(0,0,0,.02);
+  border:1px solid var(--border-color);
+  border-left:4px solid var(--accent-primary);
+  padding:var(--card-padding);
+  border-radius:var(--radius-inner);
+  font-family:var(--font-mono);
+  font-size:clamp(.8125rem,1.2vw,.9375rem);
+  color:var(--text-primary);
+  margin-top:var(--content-gap);
+  overflow-x:auto;
+}
+@media(prefers-color-scheme:dark){.code-block{background:rgba(255,255,255,.02);}}
+.code-block strong{color:var(--accent-primary);display:block;margin-bottom:.5rem;}
+.code-block .comment{color:var(--text-muted);font-style:italic;}
+.code-block .hl{color:var(--accent-primary);font-weight:600;}
+
+/* ==========================================
+   TYPOGRAPHY —— 纯色，无文字渐变
+   ========================================== */
+.title{font-family:var(--font-display);font-size:var(--title-size);font-weight:700;line-height:1.1;margin-bottom:var(--element-gap);color:var(--text-primary);letter-spacing:-.01em;}
+.subtitle{font-size:var(--subtitle-size);font-weight:500;color:var(--text-secondary);margin-bottom:var(--content-gap);line-height:1.4;}
+.h2{font-family:var(--font-display);font-size:var(--h2-size);font-weight:600;margin-bottom:var(--element-gap);color:var(--text-primary);letter-spacing:-.01em;}
+.h3{font-size:var(--h3-size);font-weight:600;margin-bottom:var(--element-gap);color:var(--text-primary);}
+.body{font-size:var(--body-size);line-height:1.5;color:var(--text-secondary);margin-bottom:var(--element-gap);}
+.caption{font-size:var(--caption-size);color:var(--text-muted);font-weight:400;}
+.accent{color:var(--accent-primary);font-weight:600;}
+
+/* ==========================================
+   BADGE — 标签
+   ========================================== */
+.badge{
+  display:inline-block;
+  background:linear-gradient(135deg,rgba(0,122,255,.1),rgba(88,86,214,.05));
+  color:var(--accent-primary);
+  padding:.5rem 1rem;
+  border-radius:var(--radius-pill);
+  font-size:var(--caption-size);
+  font-weight:500;
+  margin:0 .5rem .5rem 0;
+  border:1px solid rgba(0,122,255,.15);
+}
+
+/* ==========================================
+   BUTTONS —— 统一按钮
+   ========================================== */
+.btn{
+  display:inline-flex;align-items:center;gap:.75rem;
+  padding:1rem 2rem;border-radius:var(--radius-pill);
+  font-weight:600;font-size:var(--body-size);
+  text-decoration:none;cursor:pointer;
+  transition:all var(--duration) var(--ease-out);
+}
+.btn--primary{background:var(--accent-gradient);color:#fff;box-shadow:0 6px 20px rgba(0,122,255,.15);}
+.btn--primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,122,255,.25);}
+.btn--secondary{background:var(--card-bg);color:var(--text-primary);border:1px solid var(--border-color);box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.btn--secondary:hover{background:rgba(0,0,0,.02);border-color:var(--accent-primary);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.08);}
+@media(prefers-color-scheme:dark){.btn--secondary:hover{background:rgba(255,255,255,.05);}}
+
+/* 按钮涟漪效果 */
+.btn--primary{position:relative;overflow:hidden;}
+.btn--primary::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;background:rgba(255,255,255,.2);transform:translate(-50%,-50%);transition:width .3s,height .3s;}
+.btn--primary:active::after{width:200px;height:200px;}
+
+/* ==========================================
+   LIST —— 统一列表
+   ========================================== */
+.list-dot{list-style:none;padding-left:0;}
+.list-dot li{position:relative;margin-bottom:1rem;padding-left:2.5rem;color:var(--text-secondary);line-height:1.5;}
+.list-dot li::before{content:'';position:absolute;left:0;top:.5rem;width:8px;height:8px;background:var(--accent-primary);border-radius:50%;box-shadow:0 0 0 4px rgba(0,122,255,.1);}
+
+.list-num{list-style:none;padding-left:0;counter-reset:step;}
+.list-num li{position:relative;margin-bottom:1.5rem;padding-left:4rem;color:var(--text-secondary);}
+.list-num li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:0;width:3rem;height:3rem;background:var(--accent-gradient);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:600;box-shadow:0 6px 16px rgba(0,122,255,.15);}
+
+/* ==========================================
+   NAVIGATION —— 改进导航
+   ========================================== */
+.progress{position:fixed;top:0;left:0;height:3px;background:var(--accent-gradient);z-index:1001;width:0;transition:width .3s ease;}
+
+.nav-dots{position:fixed;right:1.5rem;top:50%;transform:translateY(-50%);z-index:1000;display:flex;flex-direction:column;gap:1rem;}
+.nav-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:rgba(0,0,0,.1);cursor:pointer;
+  transition:all var(--duration-fast) var(--ease-out);
+  border:none;outline:none;position:relative;
+}
+.nav-dot:hover{background:rgba(0,0,0,.2);transform:scale(1.2);}
+.nav-dot:focus-visible{outline:2px solid var(--accent-primary);outline-offset:2px;}
+.nav-dot.active{background:var(--accent-primary);transform:scale(1.3);box-shadow:0 0 0 4px rgba(0,122,255,.1);}
+.nav-dot::after{
+  content:attr(aria-label);position:absolute;right:20px;top:50%;transform:translateY(-50%);
+  background:var(--card-bg);color:var(--text-primary);padding:.5rem .75rem;border-radius:6px;
+  font-size:.75rem;white-space:nowrap;opacity:0;visibility:hidden;
+  transition:opacity var(--duration-fast) var(--ease-out);
+  box-shadow:0 2px 8px rgba(0,0,0,.1);pointer-events:none;
+}
+.nav-dot:hover::after{opacity:1;visibility:visible;}
+@media(prefers-color-scheme:dark){
+  .nav-dot{background:rgba(255,255,255,.1);}
+  .nav-dot:hover{background:rgba(255,255,255,.2);}
+  .nav-dot::after{box-shadow:0 2px 8px rgba(0,0,0,.3);}
+}
+
+.kbd-hint{
+  position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);
+  background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  padding:.75rem 1.5rem;border-radius:var(--radius-pill);
+  font-size:var(--caption-size);color:var(--text-secondary);
+  z-index:1000;border:1px solid var(--border-light);
+  display:flex;gap:1rem;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,.06);
+}
+.kbd{background:rgba(0,0,0,.05);padding:.25rem .75rem;border-radius:6px;font-family:var(--font-mono);font-size:.875em;color:var(--text-primary);}
+@media(prefers-color-scheme:dark){.kbd{background:rgba(255,255,255,.1);}}
+
+/* ==========================================
+   ANIMATIONS
+   ========================================== */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity var(--duration) var(--ease-out),transform var(--duration) var(--ease-out);}
+.slide.visible .reveal{opacity:1;transform:translateY(0);}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media(max-width:1024px){
+  .grid-2{grid-template-columns:1fr;}.grid-3{grid-template-columns:repeat(2,1fr);}.grid-4{grid-template-columns:1fr;}
+}
+@media(max-width:768px){
+  :root{--container-padding:clamp(1rem,2vw,1.5rem);--content-gap:clamp(.75rem,1.5vw,1.5rem);--card-padding:clamp(1rem,2vw,1.5rem);}
+  .grid-3{grid-template-columns:1fr;}
+  .nav-dots{right:1rem;}
+  .kbd-hint{bottom:1rem;padding:.5rem 1rem;font-size:.75rem;}
+  .list-num li{padding-left:3.5rem;}.list-num li::before{width:2.5rem;height:2.5rem;}
+}
+@media(hover:none) and (pointer:coarse){.kbd-hint{display:none;}}
+
+/* 减弱动画偏好 */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.2s!important;}
+  html{scroll-behavior:auto;}
+  .reveal{opacity:1;transform:none;transition:none;}
+  .card--hover:hover{transform:none;}
+}
+
+/* ==========================================
+   PRINT
+   ========================================== */
+@media print{
+  .apple-bg,.nav-dots,.progress,.kbd-hint,.btn{display:none!important;}
+  .slide{height:auto;min-height:100vh;page-break-inside:avoid;overflow:visible!important;}
+  .card{box-shadow:none!important;border:1px solid #ddd!important;break-inside:avoid;}
+  body{background:#fff!important;color:#000!important;}
+  .title,.h2,.h3{color:#000!important;}
+  .subtitle,.body,.caption{color:#333!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- 浮动背景 -->
+<div class="apple-bg">
+  <div class="backdrop"></div>
+  <div class="grid"></div>
+  <div class="circle"></div>
+  <div class="circle"></div>
+</div>
+
+<!-- 进度条 -->
+<div class="progress" id="progressBar"></div>
+
+<!-- 导航点 -->
+<nav class="nav-dots" id="navDots"></nav>
+
+<!-- 键盘提示 -->
+<div class="kbd-hint reveal">
+  <span class="kbd">←</span><span class="kbd">→</span><span>导航</span>
+  <span class="kbd">空格</span><span>下一页</span>
+</div>
+
+<!-- ============ SLIDE 1: 产品首页 ============ -->
+<section class="slide">
+<div class="slide-inner" style="justify-content:center;">
+  <div class="card card--hover reveal" style="max-width:800px;margin:0 auto;text-align:center;padding:3rem;">
+    <div style="margin-bottom:2.5rem;">
+      <h1 class="title" style="margin-bottom:1rem;font-size:clamp(2.5rem,6vw,4rem);">WeekBar</h1>
+      <p class="subtitle" style="font-size:clamp(1.25rem,2.5vw,1.75rem);margin-bottom:1.5rem;">桌面周数助手 · 优雅常驻</p>
+      <p class="body" style="font-size:clamp(1rem,1.5vw,1.125rem);max-width:600px;margin:0 auto;">在 macOS 菜单栏与 Windows 任务栏上，随时掌握当前周数。简洁设计，强大功能，专为效率而生。</p>
+    </div>
+
+    <div style="margin-bottom:2.5rem;">
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <span class="badge" style="font-size:clamp(.75rem,1vw,.875rem);padding:.6rem 1.2rem;">开源免费</span>
+        <span class="badge" style="font-size:clamp(.75rem,1vw,.875rem);padding:.6rem 1.2rem;">跨平台</span>
+        <span class="badge" style="font-size:clamp(.75rem,1vw,.875rem);padding:.6rem 1.2rem;">极简设计</span>
+        <span class="badge" style="font-size:clamp(.75rem,1vw,.875rem);padding:.6rem 1.2rem;">自动更新</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:3rem;">
+      <a href="https://github.com/zhang-jincheng/WeekBar/releases" class="btn btn--primary" target="_blank" rel="noopener" style="padding:1.25rem 2.5rem;font-size:clamp(1rem,1.2vw,1.125rem);">
+        <span>立即获取 WeekBar</span>
+        <span style="font-size:1.3em;margin-left:.5rem;">→</span>
+      </a>
+      <p class="caption" style="margin-top:1rem;color:var(--text-muted);">支持 macOS 10.15+ & Windows 10+</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:2rem;margin-top:2rem;text-align:left;">
+      <div>
+        <h3 class="h3" style="text-align:center;margin-bottom:1rem;">macOS</h3>
+        <ul class="list-dot">
+          <li>菜单栏常驻显示</li>
+          <li>原生应用体验</li>
+          <li>Apple Silicon 优化</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="h3" style="text-align:center;margin-bottom:1rem;">Windows</h3>
+        <ul class="list-dot">
+          <li>任务栏悬浮标签</li>
+          <li>轻量级显示</li>
+          <li>系统托盘集成</li>
+        </ul>
+      </div>
+    </div>
+    
+    <p class="caption" style="margin-top:2.5rem;color:var(--text-muted);">向下滚动查看完整使用指南</p>
+  </div>
+</div>
+</section>
+
+<!-- ============ SLIDE 2: 核心特性 ============ -->
+<section class="slide">
+<div class="slide-inner">
+  <h2 class="h2 reveal" style="text-align:center;">核心特性</h2>
+  <p class="subtitle reveal" style="text-align:center;margin-bottom:2.5rem;">专为效率设计的桌面工具</p>
+
+  <div class="grid-3">
+    <div class="card card--hover reveal">
+      <h3 class="h3">即时可见</h3>
+      <p class="body">打开电脑即可看到当前周数，无需打开任何应用或网页，让信息触手可及。</p>
+    </div>
+    <div class="card card--hover reveal">
+      <h3 class="h3">完全自定义</h3>
+      <p class="body">自由设置起点日期，适应学校学期、项目周期、年度计划等不同场景需求。</p>
+    </div>
+    <div class="card card--hover reveal">
+      <h3 class="h3">自动智能</h3>
+      <p class="body">每周一自动刷新，永久记住你的设置，完全无需手动操作或重复配置。</p>
+    </div>
+  </div>
+
+  <div class="code-block reveal">
+    <strong>周数计算示例</strong>
+    <div style="margin-top:.5rem;">
+      <span class="comment">// 设置起点日期为开学日</span><br>
+      <span class="hl">起点日期</span> = 2026-02-23 (开学)<br>
+      <span class="hl">当前日期</span> = 2026-03-15 → 显示: <span class="accent">Week 3</span><br>
+      <span class="hl">当前日期</span> = 2026-02-20 → 显示: <span class="accent">before week1</span>
+    </div>
+    <div style="margin-top:1rem;font-size:.9em;color:var(--text-muted);">
+      计算公式: 周数 = ⌊(当前日期 − 起点日期) / 7 天⌋ + 1
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ SLIDE 3: 平台支持 ============ -->
+<section class="slide">
+<div class="slide-inner">
+  <h2 class="h2 reveal" style="text-align:center;">平台支持</h2>
+  <p class="subtitle reveal" style="text-align:center;margin-bottom:2.5rem;">完美适配两大主流操作系统</p>
+
+  <div class="grid-2">
+    <div class="card card--hover reveal">
+      <h3 class="h3">macOS</h3>
+      <p class="body" style="margin-bottom:1.5rem;">优雅集成到菜单栏，完美融入 macOS 生态系统。</p>
+      <ol class="list-num">
+        <li>下载 WeekMenuBar-1.1.0.pkg 安装包</li>
+        <li>双击安装，按提示完成</li>
+        <li>应用自动出现在顶部菜单栏</li>
+        <li>点击图标查看周数与设置</li>
+      </ol>
+      <p class="caption" style="margin-top:1.5rem;">原生应用，支持 Apple Silicon 与 Intel</p>
+    </div>
+
+    <div class="card card--hover reveal">
+      <h3 class="h3">Windows</h3>
+      <p class="body" style="margin-bottom:1.5rem;">精致悬浮标签，不占用任务栏空间。</p>
+      <ol class="list-num">
+        <li>下载 WeekMenuBar-Setup-1.1.0.exe</li>
+        <li>运行安装器，按向导完成</li>
+        <li>显示在任务栏右下角时间区域</li>
+        <li>右键托盘图标进行设置</li>
+      </ol>
+      <p class="caption" style="margin-top:1.5rem;">轻量级显示，支持 Windows 10/11</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ SLIDE 4: 个性化设置 ============ -->
+<section class="slide">
+<div class="slide-inner">
+  <h2 class="h2 reveal" style="text-align:center;">个性化设置</h2>
+  <p class="subtitle reveal" style="text-align:center;margin-bottom:2.5rem;">根据需求定制周数计算规则</p>
+
+  <div class="grid-2">
+    <div class="card card--hover reveal">
+      <h3 class="h3">设置方法</h3>
+      <ul class="list-dot" style="margin-top:1.5rem;">
+        <li>点击菜单栏图标或右键托盘</li>
+        <li>选择 <span class="accent">设置起点日期</span></li>
+        <li>选择的日期成为 <span class="accent">Week 1 第一天</span></li>
+        <li>系统永久记住设置，重启无需重新配置</li>
+        <li>支持 2026-2126 年之间的任意日期</li>
+      </ul>
+    </div>
+
+    <div class="card card--hover reveal">
+      <h3 class="h3">应用场景</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem;">
+        <div class="inner-block"><h4 style="color:var(--accent-primary);margin-bottom:.5rem;font-size:.875rem;">学术学期</h4><p class="caption" style="color:var(--text-secondary);">以开学日为起点</p></div>
+        <div class="inner-block"><h4 style="color:var(--accent-secondary);margin-bottom:.5rem;font-size:.875rem;">项目周期</h4><p class="caption" style="color:var(--text-secondary);">以项目启动日为起点</p></div>
+        <div class="inner-block"><h4 style="color:#34c759;margin-bottom:.5rem;font-size:.875rem;">年度计划</h4><p class="caption" style="color:var(--text-secondary);">以 1月1日 为起点</p></div>
+        <div class="inner-block"><h4 style="color:#ff9500;margin-bottom:.5rem;font-size:.875rem;">个人目标</h4><p class="caption" style="color:var(--text-secondary);">以目标起始日为起点</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ SLIDE 5: 技术特性 ============ -->
+<section class="slide">
+<div class="slide-inner">
+  <h2 class="h2 reveal" style="text-align:center;">技术特性</h2>
+  <p class="subtitle reveal" style="text-align:center;margin-bottom:2.5rem;">稳定可靠，资源友好</p>
+
+  <div class="grid-4">
+    <div class="card card--hover card--compact reveal">
+      <h3 class="h3">计算逻辑</h3>
+      <ul class="list-dot" style="margin-top:1rem;">
+        <li>起点日期 = Week 1 第一天</li>
+        <li>每周一 00:00 自动递增</li>
+        <li>早于起点显示 "before week1"</li>
+        <li>支持跨年计算</li>
+      </ul>
+    </div>
+    <div class="card card--hover card--compact reveal">
+      <h3 class="h3">系统要求</h3>
+      <ul class="list-dot" style="margin-top:1rem;">
+        <li>macOS 10.15+</li><li>Windows 10+</li><li>ARM / x64 架构</li><li>内存占用 &lt; 50MB</li>
+      </ul>
+    </div>
+    <div class="card card--hover card--compact reveal">
+      <h3 class="h3">安全说明</h3>
+      <ul class="list-dot" style="margin-top:1rem;">
+        <li>macOS：需在隐私设置中允许</li><li>Windows：需点击"仍要运行"</li><li>开源代码，完全透明</li><li>无网络请求，保护隐私</li>
+      </ul>
+    </div>
+    <div class="card card--hover card--compact reveal">
+      <h3 class="h3">更新维护</h3>
+      <ul class="list-dot" style="margin-top:1rem;">
+        <li>GitHub Releases 下载更新</li><li>覆盖安装保留设置</li><li>定期功能更新</li><li>社区驱动开发</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ SLIDE 6: 常见问题 ============ -->
+<section class="slide">
+<div class="slide-inner">
+  <h2 class="h2 reveal" style="text-align:center;">常见问题</h2>
+  <p class="subtitle reveal" style="text-align:center;margin-bottom:2.5rem;">快速解决使用疑问</p>
+
+  <div class="grid-2">
+    <div class="card card--hover reveal">
+      <div style="display:grid;gap:1.5rem;">
+        <div><h3 class="h3">macOS 安全警告？</h3><p class="body">由于应用未签名，macOS 会显示安全警告。前往 <span class="accent">系统设置 → 隐私与安全性</span>，找到 WeekBar 并点击"允许"。</p></div>
+        <div><h3 class="h3">Windows 风险提示？</h3><p class="body">Windows Defender 可能标记为"不常见文件"。点击"更多信息" → "仍要运行"，或从安装目录直接运行。</p></div>
+      </div>
+    </div>
+
+    <div class="card card--hover reveal">
+      <div style="display:grid;gap:1.5rem;">
+        <div><h3 class="h3">周数显示不正确？</h3><p class="body">检查起点日期设置，确保当前日期在起点之后。如需修改，重新设置起点日期即可。</p></div>
+        <div><h3 class="h3">如何更新版本？</h3><p class="body">访问 GitHub Releases 页面下载新版安装包，覆盖安装即可保留原有设置。</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ SLIDE 7: 获取与支持 ============ -->
+<section class="slide">
+<div class="slide-inner">
+<div class="grid-1">
+  <div class="card card--hover reveal card--centered">
+    <h2 class="h2">获取 WeekBar</h2>
+    <p class="subtitle" style="margin-bottom:2.5rem;">完全免费开源，欢迎使用与贡献</p>
+
+    <div style="margin-bottom:3rem;">
+      <h3 class="h3">下载地址</h3>
+      <p class="body" style="margin-bottom:2rem;">
+        <a href="https://github.com/zhang-jincheng/WeekBar" target="_blank" rel="noopener" style="color:var(--accent-primary);text-decoration:none;font-weight:500;">github.com/zhang-jincheng/WeekBar</a> → Releases 页面
+      </p>
+      <div style="display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;">
+        <a href="https://github.com/zhang-jincheng/WeekBar/releases" class="btn btn--primary" target="_blank" rel="noopener"><span>前往下载</span><span>↓</span></a>
+        <a href="https://github.com/zhang-jincheng/WeekBar" class="btn btn--secondary" target="_blank" rel="noopener"><span>查看源码</span><span>★</span></a>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="h3">支持与反馈</h3>
+      <p class="body" style="margin-bottom:1.5rem;">WeekBar 是开源项目，欢迎 Star、Issue 和 Pull Request</p>
+      <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;">
+        <span class="badge">GitHub Issues</span><span class="badge">功能建议</span><span class="badge">Bug 报告</span><span class="badge">贡献代码</span>
+      </div>
+    </div>
+
+    <p class="caption" style="margin-top:3rem;">WeekBar · 保持简洁，专注效率</p>
+  </div>
+</div>
+</div>
+</section>
+
+<script>
+/* =========================================
+   CONTROLLER — 统一导航逻辑
+   ========================================= */
+class Presentation {
+  constructor() {
+    this.slides = document.querySelectorAll(".slide");
+    this.current = 0;
+    this.locked = false;
+    this.lockDelay = 800;
+    this.endTimer = null;
+    this.setupObserver();
+    this.setupKeys();
+    this.setupProgress();
+    this.setupDots();
+    this.slides[0].classList.add("visible");
+    if (window.matchMedia("(pointer: fine)").matches) this.setupParallax();
+    this.setupScrollEnd();
+  }
+
+  setupObserver() {
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add("visible");
+          const i = Array.from(this.slides).indexOf(e.target);
+          if (i !== -1) { this.current = i; this.sync(); }
+        }
+      });
+    }, { threshold: 0.3, rootMargin: "0px 0px -10% 0px" });
+    this.slides.forEach(s => obs.observe(s));
+  }
+
+  setupKeys() {
+    document.addEventListener("keydown", e => {
+      if (this.locked) return;
+      if (["ArrowRight","PageDown"," "].includes(e.key)) { e.preventDefault(); this.next(); }
+      else if (["ArrowLeft","PageUp"].includes(e.key)) { e.preventDefault(); this.prev(); }
+      else if (e.key === "Home") { e.preventDefault(); this.go(0); }
+      else if (e.key === "End") { e.preventDefault(); this.go(this.slides.length - 1); }
+    });
+  }
+
+  setupProgress() {
+    const bar = document.getElementById("progressBar");
+    const obs = new IntersectionObserver((entries) => {
+      let c = 0; entries.forEach(e => { if (e.isIntersecting) c++; });
+      bar.style.width = `${(c / this.slides.length) * 100}%`;
+    }, { threshold: 0.1 });
+    this.slides.forEach(s => obs.observe(s));
+  }
+
+  setupDots() {
+    const ctr = document.getElementById("navDots"); ctr.innerHTML = "";
+    this.slides.forEach((_, i) => {
+      const d = document.createElement("button");
+      d.className = "nav-dot" + (i === 0 ? " active" : "");
+      d.setAttribute("aria-label", `第 ${i + 1} 页`);
+      d.setAttribute("aria-current", i === 0 ? "step" : "false");
+      d.addEventListener("click", () => { this.go(i); d.style.transform = "scale(0.8)"; setTimeout(() => d.style.transform = "", 200); });
+      ctr.appendChild(d);
+    });
+  }
+
+  setupParallax() {
+    const cs = document.querySelectorAll(".apple-bg .circle");
+    if (!cs.length) return;
+    let rid = null;
+    window.addEventListener("mousemove", e => {
+      if (rid) cancelAnimationFrame(rid);
+      rid = requestAnimationFrame(() => {
+        const x = (e.clientX / innerWidth - .5) * 10, y = (e.clientY / innerHeight - .5) * 10;
+        cs.forEach((c, j) => { const s = .2 + j * .1; c.style.transform = `translate(${x * s}px,${y * s}px)`; });
+      });
+    });
+  }
+
+  setupScrollEnd() {
+    window.addEventListener("scroll", () => {
+      if (this.endTimer) clearTimeout(this.endTimer);
+      this.endTimer = setTimeout(() => this.locked = false, 100);
+    }, { passive: true });
+    if ("onscrollend" in window) window.addEventListener("scrollend", () => this.locked = false);
+  }
+
+  sync() {
+    document.querySelectorAll(".nav-dot").forEach((d, i) => {
+      d.classList.toggle("active", i === this.current);
+      d.setAttribute("aria-current", i === this.current ? "step" : "false");
+    });
+  }
+
+  next() { if (this.current < this.slides.length - 1) this.go(this.current + 1); }
+  prev() { if (this.current > 0) this.go(this.current - 1); }
+
+  go(i) {
+    if (this.locked || i < 0 || i >= this.slides.length) return;
+    this.locked = true; this.current = i;
+    this.slides[i].scrollIntoView({ behavior: "smooth", block: "start" });
+    this.sync();
+    if (!("onscrollend" in window)) setTimeout(() => this.locked = false, this.lockDelay);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (!("scrollSnapType" in document.documentElement.style)) {
+    document.querySelectorAll(".slide").forEach(s => s.style.scrollSnapAlign = "none");
+    document.documentElement.style.scrollSnapType = "none";
+  }
+  window.pres = new Presentation();
+});
+</script>
+
+</body>
+</html>
