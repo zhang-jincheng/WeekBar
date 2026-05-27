@@ -30,16 +30,23 @@
 ---
 
 ## 效果展示 / Screenshots
+<div align="center">
 
 ### macOS
-![macOS 选定第一周](MacOS效果图2.png)
-![macOS 菜单栏](MacOS效果图.png)
+
+<img src="MacOS效果图2.png" width="600" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
+<p><em>选定第一周</em></p>
+
+<img src="MacOS效果图.png" width="600" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
+<p><em>菜单栏</em></p>
 
 ### Windows
-![Windows 任务栏角落](Windows效果图..png)
-![Windows 任务栏角落](Windows效果图2.png)
-![Windows 任务栏角落](Windows效果图3.png)
 
+<img src="Windows效果图..png" width="600" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
+<img src="Windows效果图2.png" width="600" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
+<img src="Windows效果图3.png" width="600" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
+
+</div>
 ---
 
 ## 下载 / Download
