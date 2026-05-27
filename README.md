@@ -27,7 +27,6 @@
 - Windows：显示在任务栏时间区域附近的轻量悬浮条  
   Windows: a lightweight floating label shown near the taskbar clock area
 
----
 
 ## 效果展示 / Screenshots
 <div align="center">
