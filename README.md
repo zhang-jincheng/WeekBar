@@ -4,7 +4,10 @@
 
 **中文**：一个轻量的周数显示工具，支持 macOS 菜单栏与 Windows 任务栏角落显示。  
 **English**: A lightweight week indicator for the macOS menu bar and the Windows taskbar corner.
-### 联系方式：A3257419881@gmail.com
+#### 联系方式：A3257419881@gmail.com
+
+---
+[📘 查看 WeekBar 完整使用指南（交互式页面）](https://zhang-jincheng.github.io/WeekBar/)
 ---
 
 ## 功能 / Features
@@ -111,6 +114,3 @@ On Windows, browsers or Defender may flag the installer as an uncommon or risky 
 On Windows, install first and run from the local user directory instead of directly from shared or temporary folders
 The Windows floating label is not a native clock component; it is a lightweight display layer positioned near the taskbar clock area
 
----
-[📘 查看 WeekBar 完整使用指南（交互式页面）](https://zhang-jincheng.github.io/WeekBar/)
----
