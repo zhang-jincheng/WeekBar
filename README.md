@@ -34,17 +34,18 @@
 
 ### macOS
 
-<img src="MacOS效果图2.png" width="600" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
+<img src="MacOS效果图.png" width="400" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
+<p><em>菜单栏</em></p>
+
+<img src="MacOS效果图2.png" width="400" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
 <p><em>选定第一周</em></p>
 
-<img src="MacOS效果图.png" width="600" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
-<p><em>菜单栏</em></p>
 
 ### Windows
 
-<img src="Windows效果图..png" width="600" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
-<img src="Windows效果图2.png" width="600" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
-<img src="Windows效果图3.png" width="600" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
+<img src="Windows效果图..png" width="400" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
+<img src="Windows效果图2.png" width="400" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
+<img src="Windows效果图3.png" width="400" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
 
 </div>
 ---
