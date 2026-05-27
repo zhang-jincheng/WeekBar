@@ -110,3 +110,7 @@ Current builds are unsigned, so macOS or Windows may show security warnings
 On Windows, browsers or Defender may flag the installer as an uncommon or risky file because it is unsigned and has no download reputation; this does not automatically mean the app is malicious
 On Windows, install first and run from the local user directory instead of directly from shared or temporary folders
 The Windows floating label is not a native clock component; it is a lightweight display layer positioned near the taskbar clock area
+
+---
+[📘 查看 WeekBar 完整使用指南（交互式页面）](https://zhang-jincheng.github.io/WeekBar/)
+---
