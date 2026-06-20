@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="WeekBar - 轻量跨平台周数显示工具，支持 macOS 菜单栏与 Windows 任务栏">
+<title>WeekBar · 产品使用指南</title>
+<style>
+/* ============================================================
+   WeekBar Product Guide - Complete Design System
+   ============================================================
+   Sections:
+   1. Design Tokens (颜色/排版/间距/圆角/动效统一变量)
+   2. Dark Mode (深色模式适配)
+   3. Reset & Base (基础重置)
+   4. Components (进度条/导航点/章节布局)
+   5. Section Styles (7 个章节样式)
+   6. Responsive (响应式三档断点)
+   7. Print (打印样式)
+   8. Reduced Motion (减弱动画偏好)
+   ============================================================ */
+
+/* ===== Design Tokens ===== */
+:root {
+  /* Brand */
+  --b50:#eef4ff;--b100:#dbe7ff;--b200:#bfd4ff;--b300:#93b6ff;--b400:#608dff;
+  --b500:#3a66f5;--b600:#2648db;--b700:#1f39b0;--b800:#1d328c;--b900:#1d2f70;
+  /* Neutral */
+  --n50:#f8fafc;--n100:#f1f5f9;--n200:#e2e8f0;--n300:#cbd5e1;--n400:#94a3b8;
+  --n500:#64748b;--n600:#475569;--n700:#334155;--n800:#1e293b;--n900:#0f172a;
+  /* Semantic */
+  --bg:var(--n50);--bg-elev:#fff;--bg-sub:var(--n100);
+  --fg:var(--n900);--fg-muted:var(--n600);--fg-faint:var(--n400);
+  --bd:var(--n200);--accent:var(--b500);--accent-fg:#fff;
+  --ok:#10b981;--warn:#f59e0b;--danger:#ef4444;
+  /* Typography */
+  --fs: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,sans-serif;
+  --fm:"SF Mono","JetBrains Mono","Fira Code",monospace;
+  --xs:.75rem;--sm:.875rem;--base:1rem;--lg:1.125rem;--xl:1.25rem;
+  --2xl:1.5rem;--3xl:1.875rem;--4xl:2.5rem;--5xl:3.5rem;
+  --lt:1.2;--ln:1.6;--lr:1.8;
+  /* Spacing */
+  --s1:.25rem;--s2:.5rem;--s3:.75rem;--s4:1rem;--s5:1.25rem;
+  --s6:1.5rem;--s8:2rem;--s10:2.5rem;--s12:3rem;--s16:4rem;
+  --s20:5rem;--s24:6rem;--s32:8rem;
+  /* Radius */
+  --r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:24px;--r-full:9999px;
+  /* Shadow */
+  --sh-sm:0 1px 2px rgba(15,23,42,.06);
+  --sh-md:0 4px 12px rgba(15,23,42,.08);
+  --sh-lg:0 12px 32px rgba(15,23,42,.12);
+  --sh-xl:0 24px 48px rgba(15,23,42,.16);
+  --sh-glow:0 0 40px rgba(58,102,245,.3);
+  /* Motion */
+  --e1:cubic-bezier(.2,0,0,1);--e2:cubic-bezier(.3,0,.2,1);
+  --d1:150ms;--d2:300ms;--d3:500ms;--d4:800ms;
+  /* Layout */
+  --mw:1200px;--nw:56px;--ph:3px;
+}
+/* ===== Dark Mode ===== */
+@media (prefers-color-scheme:dark) {
+  :root {
+    --bg:var(--n900);--bg-elev:var(--n800);--bg-sub:var(--n800);
+    --fg:var(--n50);--fg-muted:var(--n400);--fg-faint:var(--n500);
+    --bd:var(--n700);--accent:var(--b400);--accent-fg:var(--n900);
+    --sh-md:0 4px 12px rgba(0,0,0,.4);
+    --sh-lg:0 12px 32px rgba(0,0,0,.5);
+    --sh-xl:0 24px 48px rgba(0,0,0,.6);
+    --sh-glow:0 0 40px rgba(96,141,255,.25);
+  }
+}
+/* ===== Reset & Base ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-snap-type:y mandatory;overflow-y:scroll}
+body{font-family:var(--fs);font-size:var(--base);line-height:var(--ln);
+  color:var(--fg);background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%;display:block}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:var(--r-sm)}
+button:focus-visible{outline-offset:4px}
+/* ===== Progress Bar ===== */
+/* Skip link visible on focus */
+.skip-link:focus-visible{top:var(--s4);outline:none;text-decoration:none}
+/* ===== Progress Bar ===== */
+.progress-bar{position:fixed;top:0;left:0;height:var(--ph);width:0;
+  background:linear-gradient(90deg,var(--b400),var(--b600));
+  z-index:1000;transition:width var(--d1) var(--e1);pointer-events:none}
+/* ===== Nav Dots ===== */
+.nav-dots{position:fixed;right:var(--s6);top:50%;transform:translateY(-50%);
+  z-index:900;display:flex;flex-direction:column;gap:var(--s4)}
+.nav-dot{width:12px;height:12px;border-radius:var(--r-full);
+  background:var(--n300);border:none;cursor:pointer;padding:0;
+  position:relative;transition:all var(--d2) var(--e1)}
+.nav-dot:hover{background:var(--b400);transform:scale(1.3)}
+.nav-dot[aria-current="true"]{background:var(--accent);transform:scale(1.4);box-shadow:var(--sh-glow)}
+.nav-dot-label{position:absolute;right:24px;top:50%;transform:translateY(-50%);
+  white-space:nowrap;font-size:var(--sm);color:var(--fg-muted);
+  opacity:0;pointer-events:none;transition:opacity var(--d1) var(--e1);
+  background:var(--bg-elev);padding:var(--s1) var(--s3);
+  border-radius:var(--r-sm);border:1px solid var(--bd);box-shadow:var(--sh-md)}
+.nav-dot:hover .nav-dot-label,.nav-dot:focus-visible .nav-dot-label{opacity:1}
+@media (prefers-color-scheme:dark){.nav-dot{background:var(--n600)}}
+/* ===== Section Base ===== */
+.section{min-height:100vh;width:100%;scroll-snap-align:start;
+  display:flex;align-items:center;justify-content:center;
+  padding:var(--s16) var(--s8);position:relative;overflow:hidden}
+.section-inner{width:100%;max-width:var(--mw);position:relative;z-index:2}
+/* Section number */
+.sec-num{font-family:var(--fm);font-size:var(--xs);color:var(--fg-faint);
+  letter-spacing:.15em;text-transform:uppercase;margin-bottom:var(--s2);display:block}
+.eyebrow{display:inline-block;font-size:var(--sm);font-weight:600;
+  margin-bottom:var(--s4);
+  color:var(--accent);letter-spacing:.025em;text-transform:uppercase;
+  margin-bottom:var(--s4);padding:var(--s1) var(--s3);
+  background:var(--b50);border-radius:var(--r-full)}
+@media (prefers-color-scheme:dark){.eyebrow{background:var(--b900);color:var(--b300)}}
+.section-title{font-size:var(--5xl);font-weight:800;line-height:var(--lt);
+  letter-spacing:-.02em;margin-bottom:var(--s6);color:var(--fg)}
+.section-title .accent{background:linear-gradient(135deg,var(--b500),var(--b300));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.section-sub{font-size:var(--xl);color:var(--fg-muted);line-height:var(--lr);
+  max-width:640px;margin-bottom:var(--s10)}
+/* Reveal animations */
+.reveal{opacity:0;transform:translateY(40px);
+  transition:opacity var(--d3) var(--e2),transform var(--d3) var(--e2)}
+.section.is-visible .reveal{opacity:1;transform:translateY(0)}
+.section.is-visible .d1{transition-delay:100ms}
+.section.is-visible .d2{transition-delay:200ms}
+.section.is-visible .d3{transition-delay:300ms}
+.section.is-visible .d4{transition-delay:400ms}
+.section.is-visible .d5{transition-delay:500ms}
+/* BG decorations */
+.deco{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;
+  pointer-events:none;z-index:1}
+.deco-a{width:500px;height:500px;background:var(--b300);top:-100px;right:-100px}
+.deco-b{width:400px;height:400px;background:var(--b200);bottom:-50px;left:-50px}
+@media (prefers-color-scheme:dark){.deco-a{background:var(--b700);opacity:.3}
+  .deco-b{background:var(--b800);opacity:.3}}
+/* ===== S1: Hero ===== */
+.hero{text-align:center;display:flex;flex-direction:column;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:var(--s2);
+  padding:var(--s2) var(--s5);background:var(--bg-elev);border:1px solid var(--bd);
+  border-radius:var(--r-full);box-shadow:var(--sh-sm);font-size:var(--sm);
+  color:var(--fg-muted);margin-bottom:var(--s8)}
+.hero-badge .dot{width:8px;height:8px;background:var(--ok);border-radius:50%;
+  animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero-title{font-size:clamp(2.5rem,8vw,5rem);font-weight:900;line-height:1.05;
+  letter-spacing:-.02em;margin-bottom:var(--s6);
+  background:linear-gradient(180deg,var(--fg),var(--fg-muted));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-title .brand{display:block;background:linear-gradient(135deg,var(--b500),var(--b300));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-desc{font-size:var(--xl);color:var(--fg-muted);max-width:600px;
+  margin-bottom:var(--s10);line-height:var(--lr)}
+.hero-actions{display:flex;gap:var(--s4);flex-wrap:wrap;justify-content:center}
+.btn{display:inline-flex;align-items:center;gap:var(--s2);
+  padding:var(--s3) var(--s6);font-size:var(--base);font-weight:600;
+  border-radius:var(--r-md);border:none;cursor:pointer;
+  transition:all var(--d1) var(--e1);text-decoration:none}
+.btn:hover{transform:translateY(-2px);text-decoration:none}
+.btn:active{transform:translateY(0)}
+.btn-pri{background:var(--accent);color:var(--accent-fg);box-shadow:var(--sh-md)}
+.btn-pri:hover{box-shadow:var(--sh-lg)}
+.btn-sec{background:var(--bg-elev);color:var(--fg);border:1px solid var(--bd);box-shadow:var(--sh-sm)}
+.btn-sec:hover{border-color:var(--accent);color:var(--accent)}
+.hero-week{margin-top:var(--s16);padding:var(--s8) var(--s12);
+  background:var(--bg-elev);border:1px solid var(--bd);
+  border-radius:var(--r-xl);box-shadow:var(--sh-xl);
+  display:flex;align-items:center;gap:var(--s8)}
+.week-num{font-family:var(--fm);font-size:var(--5xl);font-weight:800;
+  color:var(--accent);line-height:1}
+.week-label{text-align:left}
+.week-label .l{font-size:var(--xs);color:var(--fg-faint);
+  text-transform:uppercase;letter-spacing:.025em}
+.week-label .d{font-size:var(--lg);font-weight:600;color:var(--fg);margin-top:var(--s1)}
+/* Keyboard hints */
+.kbd-hint{margin-top:var(--s8);display:flex;justify-content:center;gap:var(--s3);flex-wrap:wrap}
+.kbd{display:inline-flex;align-items:center;gap:var(--s1);font-size:var(--xs);color:var(--fg-muted)}
+.kbd kbd{font-family:var(--fm);font-size:.7rem;padding:2px 6px;background:var(--bg-elev);
+  border:1px solid var(--bd);border-bottom-width:2px;border-radius:var(--r-sm);
+  color:var(--fg);font-weight:600}
+.scroll-hint{position:absolute;bottom:var(--s8);left:50%;
+  transform:translateX(-50%);display:flex;flex-direction:column;
+  align-items:center;gap:var(--s2);color:var(--fg-faint);font-size:var(--sm);
+  animation:float 3s ease-in-out infinite}
+.scroll-hint .mouse{width:24px;height:38px;border:2px solid currentColor;
+  border-radius:var(--r-full);position:relative}
+.scroll-hint .mouse::after{content:'';position:absolute;top:6px;left:50%;
+  transform:translateX(-50%);width:3px;height:8px;
+  background:currentColor;border-radius:var(--r-full);
+  animation:scrollLine 2s infinite}
+@keyframes float{0%,100%{transform:translateX(-50%) translateY(0)}
+  50%{transform:translateX(-50%) translateY(-8px)}}
+@keyframes scrollLine{0%{opacity:1;transform:translate(-50%,0)}
+  100%{opacity:0;transform:translate(-50%,16px)}}
+/* ===== S2: Features ===== */
+.features{display:grid;grid-template-columns:repeat(3,1fr);
+  gap:var(--s6);margin-top:var(--s12)}
+.fcard{background:var(--bg-elev);border:1px solid var(--bd);
+  border-radius:var(--r-lg);padding:var(--s8);
+  transition:all var(--d2) var(--e1);position:relative;overflow:hidden}
+.fcard::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;
+  background:linear-gradient(90deg,var(--b400),var(--b600));
+  transform:scaleX(0);transform-origin:left;
+  transition:transform var(--d2) var(--e1)}
+.fcard:hover{transform:translateY(-4px);box-shadow:var(--sh-lg);border-color:var(--b300)}
+.fcard:hover::before{transform:scaleX(1)}
+@media (prefers-color-scheme:dark){.fcard:hover{border-color:var(--b600)}}
+.ficon{width:48px;height:48px;background:var(--b50);
+  border-radius:var(--r-md);display:flex;align-items:center;
+  justify-content:center;font-size:var(--2xl);margin-bottom:var(--s4)}
+@media (prefers-color-scheme:dark){.ficon{background:var(--b900)}}
+.ftitle{font-size:var(--xl);font-weight:700;margin-bottom:var(--s2);color:var(--fg)}
+.fdesc{font-size:var(--sm);color:var(--fg-muted);line-height:var(--lr)}
+/* ===== S3: Platforms ===== */
+.platforms{display:grid;grid-template-columns:1fr 1fr;gap:var(--s10);align-items:center}
+.pcard{background:var(--bg-elev);border:1px solid var(--bd);
+  border-radius:var(--r-xl);padding:var(--s10);
+  box-shadow:var(--sh-md);transition:all var(--d2) var(--e1)}
+.pcard:hover{box-shadow:var(--sh-xl);transform:translateY(-4px)}
+.phead{display:flex;align-items:center;gap:var(--s4);margin-bottom:var(--s6)}
+.plogo{width:56px;height:56px;background:var(--bg-sub);
+  border-radius:var(--r-md);display:flex;align-items:center;
+  justify-content:center;font-size:var(--3xl)}
+.pname{font-size:var(--2xl);font-weight:700}
+.pspec{font-size:var(--sm);color:var(--fg-faint)}
+.pfeat{list-style:none;margin-bottom:var(--s6)}
+.pfeat li{padding:var(--s2) 0;display:flex;align-items:center;gap:var(--s3);
+  color:var(--fg-muted);font-size:var(--sm)}
+.pfeat li::before{content:'✓';color:var(--ok);font-weight:700;width:20px}
+.pdl{display:flex;align-items:center;justify-content:space-between;
+  padding-top:var(--s4);border-top:1px solid var(--bd)}
+.pver{font-family:var(--fm);font-size:var(--sm);color:var(--fg-faint)}
+/* ===== S4: Settings ===== */
+.settings{display:grid;grid-template-columns:1fr 1fr;gap:var(--s12);align-items:center}
+.set-preview{background:var(--n900);border-radius:var(--r-xl);
+  padding:var(--s8);box-shadow:var(--sh-xl);position:relative;overflow:hidden}
+.set-preview .mbar{height:28px;background:rgba(255,255,255,.1);
+  backdrop-filter:blur(10px);border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:flex-end;
+  padding:0 var(--s3);margin-bottom:var(--s6)}
+.set-preview .mitem{font-family:var(--fm);font-size:var(--sm);color:#fff;
+  padding:var(--s1) var(--s2);border-radius:var(--r-sm);background:rgba(255,255,255,.15)}
+.set-panel{background:var(--n800);border-radius:var(--r-md);padding:var(--s5)}
+.set-panel h4{color:#fff;font-size:var(--sm);margin-bottom:var(--s3);font-weight:600}
+.set-row{display:flex;align-items:center;justify-content:space-between;
+  padding:var(--s2) 0;color:var(--n300);font-size:var(--sm)}
+.toggle{width:36px;height:20px;background:var(--b500);
+  border-radius:var(--r-full);position:relative}
+.toggle::after{content:'';position:absolute;top:2px;right:2px;
+  width:16px;height:16px;background:#fff;border-radius:50%}
+.toggle.off{background:var(--n600)}
+.toggle.off::after{right:auto;left:2px}
+.slist{list-style:none}
+.slist li{padding:var(--s4) 0;border-bottom:1px solid var(--bd);
+  display:flex;gap:var(--s4)}
+.slist li:last-child{border-bottom:none}
+.slist .icon{flex-shrink:0;width:40px;height:40px;background:var(--b50);
+  border-radius:var(--r-md);display:flex;align-items:center;
+  justify-content:center;font-size:var(--lg)}
+@media (prefers-color-scheme:dark){.slist .icon{background:var(--b900)}}
+.slist .text h5{font-size:var(--base);font-weight:600;margin-bottom:var(--s1)}
+.slist .text p{font-size:var(--sm);color:var(--fg-muted);line-height:1.5}
+/* ===== S5: Tech ===== */
+.tech-grid{display:grid;grid-template-columns:repeat(4,1fr);
+  gap:var(--s4);margin-top:var(--s12)}
+.tstat{text-align:center;padding:var(--s6) var(--s4);
+  background:var(--bg-elev);border:1px solid var(--bd);
+  border-radius:var(--r-lg);transition:all var(--d2) var(--e1)}
+.tstat:hover{transform:translateY(-4px);box-shadow:var(--sh-lg);border-color:var(--b300)}
+@media (prefers-color-scheme:dark){.tstat:hover{border-color:var(--b600)}}
+.tstat .num{font-size:var(--4xl);font-weight:800;font-family:var(--fm);
+  background:linear-gradient(135deg,var(--b500),var(--b300));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;line-height:1;margin-bottom:var(--s2)}
+.tstat .lab{font-size:var(--sm);color:var(--fg-muted)}
+.tech-detail{display:grid;grid-template-columns:repeat(2,1fr);
+  gap:var(--s4);margin-top:var(--s6)}
+.tdetail{display:flex;align-items:center;gap:var(--s3);
+  padding:var(--s3) var(--s4);background:var(--bg-sub);
+  border-radius:var(--r-md);font-size:var(--sm)}
+.tdetail .code{font-family:var(--fm);font-weight:600;color:var(--accent)}
+.tdetail .desc{color:var(--fg-muted)}
+/* ===== S6: FAQ ===== */
+.faq{max-width:800px;margin:var(--s12) auto 0}
+.faq-item{margin-bottom:var(--s3);background:var(--bg-elev);
+  border:1px solid var(--bd);border-radius:var(--r-lg);
+  overflow:hidden;transition:all var(--d1) var(--e1)}
+.faq-item:hover{border-color:var(--b300)}
+@media (prefers-color-scheme:dark){.faq-item:hover{border-color:var(--b600)}}
+.faq-q{width:100%;text-align:left;background:none;border:none;
+  padding:var(--s5) var(--s6);font-size:var(--base);font-weight:600;
+  color:var(--fg);cursor:pointer;display:flex;justify-content:space-between;
+  align-items:center;font-family:inherit}
+.faq-q .ic{transition:transform var(--d2) var(--e1);font-size:var(--xl);
+  color:var(--accent);line-height:1}
+.faq-item[aria-expanded="true"] .faq-q .ic{transform:rotate(45deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height var(--d2) var(--e1);
+  padding:0 var(--s6)}
+.faq-item[aria-expanded="true"] .faq-a{max-height:300px;padding-bottom:var(--s5)}
+.faq-a p{color:var(--fg-muted);line-height:var(--lr);font-size:var(--sm)}
+/* ===== S7: CTA ===== */
+.cta{text-align:center}
+.dl-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s6);
+  max-width:700px;margin:var(--s12) auto}
+.dl-card{background:var(--bg-elev);border:2px solid var(--bd);
+  border-radius:var(--r-xl);padding:var(--s8);text-align:center;
+  transition:all var(--d2) var(--e1);text-decoration:none;display:block;color:var(--fg)}
+.dl-card:hover{border-color:var(--accent);transform:translateY(-4px);
+  box-shadow:var(--sh-xl);text-decoration:none}
+.dl-card .os{font-size:var(--5xl);margin-bottom:var(--s4)}
+.dl-card h3{font-size:var(--xl);margin-bottom:var(--s1)}
+.dl-card .fi{font-family:var(--fm);font-size:var(--xs);color:var(--fg-faint);margin-bottom:var(--s4)}
+.dl-card .sz{font-size:var(--sm);color:var(--fg-muted)}
+.support{display:flex;justify-content:center;gap:var(--s8);
+  flex-wrap:wrap;margin-top:var(--s8)}
+.sup-link{display:flex;align-items:center;gap:var(--s2);color:var(--fg-muted);
+  font-size:var(--sm);transition:color var(--d1)}
+.sup-link:hover{color:var(--accent);text-decoration:none}
+/* ===== Footer ===== */
+.site-footer{margin-top:var(--s16);padding-top:var(--s8);
+  border-top:1px solid var(--bd);color:var(--fg-faint);font-size:var(--sm)}
+.footer-inner{max-width:600px;margin:0 auto}
+.copyright{font-weight:600;color:var(--fg-muted);margin-bottom:var(--s2)}
+.footer-tag{font-size:var(--xs);opacity:.7}
+/* ===== Responsive ===== */
+@media (max-width:1024px){
+  .section{padding:var(--s12) var(--s6)}
+  .section-title{font-size:var(--4xl)}
+  .features{grid-template-columns:repeat(2,1fr)}
+  .tech-grid{grid-template-columns:repeat(2,1fr)}
+  .platforms{grid-template-columns:1fr;gap:var(--s6)}
+  .settings{grid-template-columns:1fr;gap:var(--s8)}
+  .deco-a{width:300px;height:300px}
+  .deco-b{width:250px;height:250px}
+}
+@media (max-width:640px){
+  .section{padding:var(--s10) var(--s4)}
+  .section-title{font-size:var(--3xl)}
+  .section-sub{font-size:var(--base)}
+  .features{grid-template-columns:1fr}
+  .tech-grid{grid-template-columns:1fr 1fr;gap:var(--s3)}
+  .tstat{padding:var(--s4) var(--s2)}
+  .tstat .num{font-size:var(--3xl)}
+  .tech-detail{grid-template-columns:1fr}
+  .dl-grid{grid-template-columns:1fr}
+  .hero-week{flex-direction:column;gap:var(--s4);padding:var(--s6)}
+  .week-num{font-size:var(--4xl)}
+  .week-label{text-align:center}
+  .nav-dots{right:var(--s3);gap:var(--s3)}
+  .nav-dot{width:10px;height:10px}
+  .nav-dot-label{display:none}
+  .hero-actions{flex-direction:column;width:100%}
+  .hero-actions .btn{justify-content:center}
+  .fcard{padding:var(--s6)}
+  .pcard{padding:var(--s6)}
+  .support{gap:var(--s4)}
+  .faq-q{padding:var(--s4);font-size:var(--sm)}
+}
+/* ===== Print ===== */
+@media print{
+  html{scroll-snap-type:none;overflow:visible}
+  body{background:white;color:black}
+  .progress-bar,.nav-dots,.scroll-hint,.deco{display:none!important}
+  .section{min-height:auto;page-break-after:always;padding:var(--s8) 0;scroll-snap-align:none}
+  .section:last-child{page-break-after:auto}
+  .site-footer{border-color:#ccc;color:#666}
+  .fcard,.pcard,.tstat,.dl-card,.faq-item{break-inside:avoid;
+    box-shadow:none!important;border:1px solid #ccc!important}
+  .btn-pri{background:#333!important;color:white!important;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .section-title .accent,.tstat .num{-webkit-text-fill-color:black;color:black}
+  a{color:black;text-decoration:underline}
+}
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;
+    animation-iteration-count:1!important;transition-duration:.01ms!important;
+    scroll-behavior:auto!important}
+  .reveal{opacity:1;transform:none}
+  html{scroll-snap-type:none}
+}
+</style>
+</head>
+<body>
+<!-- Skip to content link for keyboard / screen reader users -->
+<a href="#hero" class="skip-link" style="position:fixed;top:-100px;left:var(--s4);z-index:2000;
+  padding:var(--s3) var(--s6);background:var(--accent);color:var(--accent-fg);
+  font-weight:600;border-radius:var(--r-md);box-shadow:var(--sh-lg);
+  transition:top var(--d1) var(--e1);">跳转到主要内容</a>
+<div class="progress-bar" id="progressBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="阅读进度"></div>
+<nav class="nav-dots" aria-label="章节导航">
+  <button class="nav-dot" data-target="hero" aria-label="跳转到产品首页"><span class="nav-dot-label">产品首页</span></button>
+  <button class="nav-dot" data-target="features" aria-label="跳转到核心特性"><span class="nav-dot-label">核心特性</span></button>
+  <button class="nav-dot" data-target="platforms" aria-label="跳转到平台支持"><span class="nav-dot-label">平台支持</span></button>
+  <button class="nav-dot" data-target="settings" aria-label="跳转到个性化设置"><span class="nav-dot-label">个性化设置</span></button>
+  <button class="nav-dot" data-target="tech" aria-label="跳转到技术特性"><span class="nav-dot-label">技术特性</span></button>
+  <button class="nav-dot" data-target="faq" aria-label="跳转到常见问题"><span class="nav-dot-label">常见问题</span></button>
+  <button class="nav-dot" data-target="download" aria-label="跳转到获取与支持"><span class="nav-dot-label">获取与支持</span></button>
+</nav>
+<!-- S1: Hero -->
+<section class="section" id="hero" aria-label="产品首页">
+  <div class="deco deco-a" aria-hidden="true"></div>
+  <div class="deco deco-b" aria-hidden="true"></div>
+  <div class="section-inner hero">
+    <span class="sec-num reveal" style="margin-bottom:var(--s4);">00 / Home</span>
+    <div class="hero-badge reveal"><span class="dot" aria-hidden="true"></span><span>v1.1.0 · 正式发布</span></div>
+    <h1 class="hero-title reveal d1">轻量周数工具<span class="brand">WeekBar</span></h1>
+    <p class="hero-desc reveal d2">常驻系统菜单栏与任务栏，时刻掌握当前周数。支持 macOS 与 Windows 双平台原生实现，轻量、极速、零打扰。</p>
+    <div class="hero-actions reveal d3">
+      <a href="#download" class="btn btn-pri" aria-label="立即下载 WeekBar"><span aria-hidden="true">↓</span> 立即下载</a>
+      <a href="#features" class="btn btn-sec" aria-label="了解更多功能特性"><span aria-hidden="true">→</span> 了解更多</a>
+    </div>
+    <div class="hero-week reveal d4" aria-label="当前周数展示预览">
+      <div class="week-num" id="heroWeekNum">W25</div>
+      <div class="week-label"><div class="l">当前周数</div><div class="d" id="heroDate">2026年6月15日 — 6月21日</div></div>
+    </div>
+    <div class="kbd-hint reveal d5" aria-label="键盘快捷键提示">
+      <span class="kbd"><kbd>↓</kbd><kbd>Space</kbd> 下一章</span>
+      <span class="kbd"><kbd>↑</kbd> 上一章</span>
+      <span class="kbd"><kbd>Home</kbd> 首页</span>
+      <span class="kbd"><kbd>End</kbd> 底部</span>
+    </div>
+  </div>
+  <div class="scroll-hint" aria-hidden="true"><div class="mouse"></div><span>向下滚动</span></div>
+</section>
+<!-- S2: Features -->
+<section class="section" id="features" aria-label="核心特性">
+  <div class="deco deco-a" aria-hidden="true" style="top:auto;bottom:-100px;right:-100px;"></div>
+  <div class="section-inner">
+    <span class="sec-num reveal">01 / Features</span>
+    <span class="eyebrow reveal">核心特性</span>
+    <h2 class="section-title reveal d1">简洁而不简单，<span class="accent">专注于一件事</span></h2>
+    <p class="section-sub reveal d2">WeekBar 以最小化的方式融入你的工作流，不占用额外空间，却能让你随时掌握时间节奏。</p>
+    <div class="features">
+      <div class="fcard reveal d2"><div class="ficon" aria-hidden="true">📅</div><h3 class="ftitle">自定义起点</h3><p class="fdesc">支持设置任意起点日期，范围从 2026 年至 2126 年，灵活适配项目周期与个人习惯。</p></div>
+      <div class="fcard reveal d3"><div class="ficon" aria-hidden="true">💾</div><h3 class="ftitle">自动记忆</h3><p class="fdesc">你的设置会被自动保存，重启设备后无需重新配置，开箱即用，无感体验。</p></div>
+      <div class="fcard reveal d4"><div class="ficon" aria-hidden="true">🔄</div><h3 class="ftitle">智能刷新</h3><p class="fdesc">每日零点自动刷新周数，无需手动操作，确保显示始终准确无误。</p></div>
+      <div class="fcard reveal d3"><div class="ficon" aria-hidden="true">🍎</div><h3 class="ftitle">macOS 原生</h3><p class="fdesc">基于 Swift 原生开发，深度集成系统菜单栏，极低资源占用，流畅丝滑。</p></div>
+      <div class="fcard reveal d4"><div class="ficon" aria-hidden="true">🪟</div><h3 class="ftitle">Windows 原生</h3><p class="fdesc">基于 C# 原生开发，常驻任务栏时间区域附近，提供安装器一键部署。</p></div>
+      <div class="fcard reveal d5"><div class="ficon" aria-hidden="true">⚡</div><h3 class="ftitle">极致轻量</h3><p class="fdesc">极小的安装包与极低的内存占用，后台静默运行，完全不影响系统性能。</p></div>
+    </div>
+  </div>
+</section>
+<!-- S3: Platforms -->
+<section class="section" id="platforms" aria-label="平台支持">
+  <div class="deco deco-b" aria-hidden="true" style="bottom:-50px;right:-50px;left:auto;"></div>
+  <div class="section-inner">
+    <span class="sec-num reveal">02 / Platforms</span>
+    <span class="eyebrow reveal">平台支持</span>
+    <h2 class="section-title reveal d1"><span class="accent">双平台</span>原生实现</h2>
+    <p class="section-sub reveal d2">每个平台都采用原生技术栈开发，确保最佳的性能、兼容性与系统集成度。</p>
+    <div class="platforms">
+      <div class="pcard reveal d2">
+        <div class="phead"><div class="plogo" aria-hidden="true">🍎</div><div><div class="pname">macOS</div><div class="pspec">Swift · 菜单栏原生应用</div></div></div>
+        <ul class="pfeat"><li>原生 SwiftUI 界面</li><li>系统菜单栏常驻显示</li><li>极低内存占用 (&lt; 20MB)</li><li>支持开机自启</li><li>pkg 安装包一键部署</li></ul>
+        <div class="pdl"><span class="pver">WeekMenuBar-1.1.0.pkg</span><a href="#download" class="btn btn-pri" style="padding:var(--s2) var(--s4);font-size:var(--sm);">下载</a></div>
+      </div>
+      <div class="pcard reveal d3">
+        <div class="phead"><div class="plogo" aria-hidden="true">🪟</div><div><div class="pname">Windows</div><div class="pspec">C# · 任务栏常驻应用</div></div></div>
+        <ul class="pfeat"><li>原生 WinForms / WPF 实现</li><li>任务栏时间区域附近显示</li><li>轻量悬浮窗设计</li><li>提供安装器与便携版本</li><li>支持 Windows 10 / 11</li></ul>
+        <div class="pdl"><span class="pver">WeekMenuBar-Setup-1.1.0.exe</span><a href="#download" class="btn btn-pri" style="padding:var(--s2) var(--s4);font-size:var(--sm);">下载</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- S4: Settings -->
+<section class="section" id="settings" aria-label="个性化设置">
+  <div class="deco deco-a" aria-hidden="true" style="top:-100px;left:-100px;"></div>
+  <div class="section-inner">
+    <span class="sec-num reveal">03 / Personalization</span>
+    <span class="eyebrow reveal">个性化设置</span>
+    <h2 class="section-title reveal d1">按照你的方式<span class="accent">定制</span></h2>
+    <div class="settings">
+      <div class="set-preview reveal d2" aria-hidden="true">
+        <div class="mbar"><div class="mitem">W25</div></div>
+        <div class="set-panel">
+          <h4>偏好设置</h4>
+          <div class="set-row"><span>开机自动启动</span><div class="toggle"></div></div>
+          <div class="set-row"><span>显示完整周数</span><div class="toggle"></div></div>
+          <div class="set-row"><span>启用动画效果</span><div class="toggle off"></div></div>
+          <div class="set-row" style="margin-top:var(--s4);border-top:1px solid rgba(255,255,255,.1);padding-top:var(--s4);"><span>起点日期</span><span style="font-family:var(--fm);color:var(--b300);">2026-01-01</span></div>
+        </div>
+      </div>
+      <div>
+        <p class="section-sub reveal d2" style="margin-bottom:var(--s6);">从显示格式到起点日期，从开机自启到刷新时机，每一项都可以按照你的习惯进行调整。</p>
+        <ul class="slist reveal d3">
+          <li><div class="icon" aria-hidden="true">📆</div><div class="text"><h5>自定义起点日期</h5><p>设置项目启动日、年初或任意日期作为第一周的起点，范围覆盖一百年。</p></div></li>
+          <li><div class="icon" aria-hidden="true">🔠</div><div class="text"><h5>灵活的显示格式</h5><p>支持 W25、第25周、Week 25 等多种显示格式，适配不同语言与场景。</p></div></li>
+          <li><div class="icon" aria-hidden="true">🚀</div><div class="text"><h5>开机自启选项</h5><p>一键开启开机自动启动，登录系统后立即显示，无需手动打开。</p></div></li>
+          <li><div class="icon" aria-hidden="true">⏰</div><div class="text"><h5>智能刷新策略</h5><p>每日零点自动刷新，配合系统休眠唤醒机制，确保显示时刻准确。</p></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- S5: Tech -->
+<section class="section" id="tech" aria-label="技术特性">
+  <div class="deco deco-b" aria-hidden="true" style="bottom:-50px;left:-50px;"></div>
+  <div class="section-inner">
+    <span class="sec-num reveal">04 / Tech Specs</span>
+    <span class="eyebrow reveal">技术特性</span>
+    <h2 class="section-title reveal d1"><span class="accent">原生品质</span>，精心打磨</h2>
+    <p class="section-sub reveal d2">坚持使用各平台原生技术栈，不依赖 Electron 等跨平台框架，确保最小体积与最佳性能。</p>
+    <div class="tech-grid">
+      <div class="tstat reveal d2"><div class="num">&lt;20MB</div><div class="lab">内存占用</div></div>
+      <div class="tstat reveal d3"><div class="num">0.1%</div><div class="lab">CPU 占用</div></div>
+      <div class="tstat reveal d4"><div class="num">100y</div><div class="lab">日期跨度</div></div>
+      <div class="tstat reveal d5"><div class="num">2</div><div class="lab">原生平台</div></div>
+    </div>
+    <div class="tech-detail reveal d4">
+      <div class="tdetail"><span class="code">Swift</span><span class="desc">— macOS 原生开发语言</span></div>
+      <div class="tdetail"><span class="code">C#</span><span class="desc">— Windows 原生开发语言</span></div>
+      <div class="tdetail"><span class="code">pkg</span><span class="desc">— macOS 标准安装包格式</span></div>
+      <div class="tdetail"><span class="code">Setup.exe</span><span class="desc">— Windows 安装器一键部署</span></div>
+      <div class="tdetail"><span class="code">Auto-Refresh</span><span class="desc">— 零点自动刷新周数</span></div>
+      <div class="tdetail"><span class="code">Persistence</span><span class="desc">— 设置自动持久化保存</span></div>
+      <div class="tdetail"><span class="code">Open Source</span><span class="desc">— 完全开源，自由使用修改</span></div>
+      <div class="tdetail"><span class="code">Zero Ads</span><span class="desc">— 无广告无追踪，纯净体验</span></div>
+    </div>
+    <div class="tech-arch reveal d5" style="margin-top:var(--s8);padding:var(--s6);
+      background:var(--bg-sub);border-radius:var(--r-lg);text-align:left;">
+      <h4 style="font-size:var(--lg);margin-bottom:var(--s3);color:var(--fg);">架构特点</h4>
+      <p style="font-size:var(--sm);color:var(--fg-muted);line-height:var(--lr);">
+        WeekBar 拒绝 Electron 等重型框架，坚持原生路线。macOS 端基于 SwiftUI 与 AppKit 混合架构，
+        直接使用系统菜单栏 API；Windows 端基于 WinForms 与原生 Win32 API，实现贴近任务栏的轻量化悬浮层。
+        两端均采用最小化后台运行策略，仅在必要时刷新 UI，确保资源占用可以忽略不计。
+      </p>
+    </div>
+  </div>
+</section>
+<!-- S6: FAQ -->
+<section class="section" id="faq" aria-label="常见问题">
+  <div class="deco deco-a" aria-hidden="true" style="top:auto;bottom:-100px;right:-100px;"></div>
+  <div class="section-inner" style="text-align:center;">
+    <span class="sec-num reveal">05 / FAQ</span>
+    <span class="eyebrow reveal">常见问题</span>
+    <h2 class="section-title reveal d1">你可能想知道的<span class="accent">问题</span></h2>
+    <div class="faq" role="list">
+      <div class="faq-item reveal d2" aria-expanded="false"><button class="faq-q" aria-expanded="false" aria-controls="faq1">WeekBar 是免费的吗？<span class="ic" aria-hidden="true">+</span></button><div class="faq-a" id="faq1" role="region"><p>是的，WeekBar 完全免费且开源。你可以在 GitHub 上获取源代码，自由使用、修改和分发。</p></div></div>
+      <div class="faq-item reveal d3" aria-expanded="false"><button class="faq-q" aria-expanded="false" aria-controls="faq2">为什么首次运行会提示安全警告？<span class="ic" aria-hidden="true">+</span></button><div class="faq-a" id="faq2" role="region"><p>当前版本的安装包尚未进行代码签名，因此 macOS 和 Windows 可能会在首次运行时弹出安全提示。这是正常现象，你可以在系统设置中允许运行。我们计划在后续版本中加入签名支持。</p></div></div>
+      <div class="faq-item reveal d4" aria-expanded="false"><button class="faq-q" aria-expanded="false" aria-controls="faq3">Windows 版本为什么不在系统托盘图标里？<span class="ic" aria-hidden="true">+</span></button><div class="faq-a" id="faq3" role="region"><p>Windows 版本的悬浮条不是系统时钟原生控件，而是贴近任务栏时间区域的轻量显示层。这样可以确保在不同 DPI 设置和任务栏位置下都能正确显示。</p></div></div>
+      <div class="faq-item reveal d5" aria-expanded="false"><button class="faq-q" aria-expanded="false" aria-controls="faq4">如何设置自定义的起点日期？<span class="ic" aria-hidden="true">+</span></button><div class="faq-a" id="faq4" role="region"><p>点击菜单栏/任务栏中的 WeekBar 图标，选择"设置"或"偏好设置"，在起点日期选项中选择你想要的日期即可。设置会被自动保存，重启后依然有效。</p></div></div>
+      <div class="faq-item reveal d5" aria-expanded="false"><button class="faq-q" aria-expanded="false" aria-controls="faq5">WeekBar 支持哪些系统版本？<span class="ic" aria-hidden="true">+</span></button><div class="faq-a" id="faq5" role="region"><p>macOS 版本支持 macOS 11 (Big Sur) 及以上版本；Windows 版本支持 Windows 10 和 Windows 11。请确保系统已更新到最新补丁以获得最佳体验。</p></div></div>
+    </div>
+  </div>
+</section>
+<!-- S7: Download -->
+<section class="section" id="download" aria-label="获取与支持">
+  <div class="deco deco-b" aria-hidden="true" style="bottom:-50px;right:-50px;left:auto;"></div>
+  <div class="section-inner cta">
+    <span class="sec-num reveal">06 / Get Started</span>
+    <span class="eyebrow reveal">获取与支持</span>
+    <h2 class="section-title reveal d1">开始使用 <span class="accent">WeekBar</span></h2>
+    <p class="section-sub reveal d2" style="margin-left:auto;margin-right:auto;">选择你的平台，下载最新版本。如有任何问题，欢迎通过以下渠道获取支持。</p>
+    <div class="dl-grid">
+      <a href="https://github.com/" class="dl-card reveal d2" aria-label="下载 macOS 版本"><div class="os" aria-hidden="true">🍎</div><h3>macOS</h3><div class="fi">WeekMenuBar-1.1.0.pkg</div><div class="sz">v1.1.0 · pkg 安装包</div></a>
+      <a href="https://github.com/" class="dl-card reveal d3" aria-label="下载 Windows 版本"><div class="os" aria-hidden="true">🪟</div><h3>Windows</h3><div class="fi">WeekMenuBar-Setup-1.1.0.exe</div><div class="sz">v1.1.0 · 安装器</div></a>
+    </div>
+    <div class="support reveal d4">
+      <a href="https://github.com/" class="sup-link" aria-label="访问 GitHub 项目页面"><span aria-hidden="true">📦</span> GitHub 项目</a>
+      <a href="https://github.com/issues" class="sup-link" aria-label="提交问题反馈"><span aria-hidden="true">🐛</span> 提交反馈</a>
+      <a href="https://github.com/" class="sup-link" aria-label="查看更新日志"><span aria-hidden="true">📝</span> 更新日志</a>
+      <a href="mailto:" class="sup-link" aria-label="发送邮件联系"><span aria-hidden="true">✉️</span> 联系我们</a>
+    </div>
+    <footer class="site-footer reveal d5" role="contentinfo">
+      <div class="footer-inner">
+        <p class="copyright">© 2026 WeekBar · 开源轻量工具</p>
+        <p class="footer-tag">用代码标记每一周 · Made with ♥ across macOS & Windows</p>
+      </div>
+    </footer>
+  </div>
+</section>
+<script>
+(function() {
+  'use strict';
+  var pb = document.getElementById('progressBar');
+  var dots = document.querySelectorAll('.nav-dot');
+  var secs = document.querySelectorAll('.section');
+  var faqs = document.querySelectorAll('.faq-item');
+  var hwn = document.getElementById('heroWeekNum');
+  var hdt = document.getElementById('heroDate');
+  // Hero week calculation
+  function getWeek(d) {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    var ys = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return { y: d.getUTCFullYear(), w: Math.ceil((((d - ys) / 86400000) + 1) / 7) };
+  }
+  function weekRange(date) {
+    var d = new Date(date), day = d.getDay();
+    var diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    var mon = new Date(d.setDate(diff)), sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    var f = function(dt) { return (dt.getMonth()+1) + '月' + dt.getDate() + '日'; };
+    return f(mon) + ' — ' + f(sun);
+  }
+  var now = new Date(), wk = getWeek(now);
+  hwn.textContent = 'W' + wk.w;
+  hdt.textContent = wk.y + '年' + weekRange(now);
+  // Section visibility observer
+  var so = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      e.target.classList.toggle('is-visible', e.isIntersecting);
+    });
+  }, { threshold: 0.4 });
+  secs.forEach(function(s) { so.observe(s); });
+  // Active nav dot
+  var ao = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        var id = e.target.id;
+        dots.forEach(function(d) {
+          d.setAttribute('aria-current', d.getAttribute('data-target') === id ? 'true' : 'false');
+        });
+      }
+    });
+  }, { threshold: 0.5 });
+  secs.forEach(function(s) { ao.observe(s); });
+  // Scroll progress
+  var ticking = false;
+  function updateProgress() {
+    var st = window.scrollY;
+    var dh = document.documentElement.scrollHeight - window.innerHeight;
+    var p = dh > 0 ? (st / dh) * 100 : 0;
+    pb.style.width = p + '%';
+    pb.setAttribute('aria-valuenow', Math.round(p));
+  }
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      window.requestAnimationFrame(function() { updateProgress(); ticking = false; });
+      ticking = true;
+    }
+  }, { passive: true });
+  updateProgress();
+  // Nav dot click
+  dots.forEach(function(d) {
+    d.addEventListener('click', function() {
+      var t = document.getElementById(d.getAttribute('data-target'));
+      if (t) { t.scrollIntoView({ behavior: 'smooth' }); t.setAttribute('tabindex', '-1'); t.focus({ preventScroll: true }); }
+    });
+  });
+  // Keyboard navigation
+  var ci = 0;
+  function curIdx() {
+    for (var i = 0; i < secs.length; i++)
+      if (secs[i].classList.contains('is-visible')) { ci = i; return i; }
+    return 0;
+  }
+  function goTo(i) {
+    i = Math.max(0, Math.min(secs.length - 1, i));
+    secs[i].scrollIntoView({ behavior: 'smooth' });
+    ci = i;
+  }
+  document.addEventListener('keydown', function(e) {
+    if (['INPUT','TEXTAREA','SELECT'].indexOf(e.target.tagName) >= 0) return;
+    switch (e.key) {
+      case 'ArrowDown': case 'PageDown': case ' ':
+        e.preventDefault(); goTo(curIdx() + 1); break;
+      case 'ArrowUp': case 'PageUp':
+        e.preventDefault(); goTo(curIdx() - 1); break;
+      case 'Home': e.preventDefault(); goTo(0); break;
+      case 'End': e.preventDefault(); goTo(secs.length - 1); break;
+    }
+  });
+  // Ensure first section is visible on load
+  if (secs.length > 0) secs[0].classList.add('is-visible');
+  // FAQ accordion
+  faqs.forEach(function(item) {
+    var btn = item.querySelector('.faq-q');
+    btn.addEventListener('click', function() {
+      var expanded = item.getAttribute('aria-expanded') === 'true';
+      faqs.forEach(function(i) {
+        i.setAttribute('aria-expanded', 'false');
+        var b = i.querySelector('.faq-q');
+        if (b) b.setAttribute('aria-expanded', 'false');
+      });
+      if (!expanded) {
+        item.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
